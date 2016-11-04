@@ -11,7 +11,7 @@
     "binarta.rest.client.angular": "0.*.*",
     "binarta.application.angular": "1.*.*",
     "binarta.toggle.edit.mode.angular": "1.*.*",
-    "binarta.catalog.angular": "1.*.*",
+    "binarta.catalog.angular": "2.*.*",
     "binarta.notifications.angular": "1.*.*"
   },
   "devDependencies": {
