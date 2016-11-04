@@ -47,7 +47,7 @@
 
             function onEditModeChanged(editMode) {
                 if (!editMode) ctrl.state = new ReadOnlyState();
-                else updateEditState()
+                else updateEditState();
             }
 
             function updateEditState() {

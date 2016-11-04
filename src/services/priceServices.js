@@ -16,6 +16,8 @@
         this.getCountryCode = function () {
             if (!countryCodePromise) countryCodePromise = reader({key: countryCodeKey}).then(function (result) {
                 return result.data.value;
+            }, function () {
+                return '';
             });
             return countryCodePromise;
         };
@@ -23,6 +25,8 @@
         this.getVatRate = function () {
             if (!vatRatePromise) vatRatePromise = reader({key: defaultVatRateKey}).then(function (result) {
                 return result.data.value * 100;
+            }, function () {
+                return 0;
             });
             return vatRatePromise;
         };
@@ -70,21 +74,24 @@
         };
 
         this.getPriceSettings = function () {
+            var unconfirmed = {
+                status: 'unconfirmed'
+            };
+
             return $q.all([
                 self.getVatOnPriceInterpretedAs(),
                 self.getCurrency(),
                 self.getCountryCode(),
                 self.getVatRate()
             ]).then(function (results) {
-                return {
+                if (results[2] == '') return unconfirmed;
+                else return {
                     vatOnPriceInterpretedAs: results[0],
                     currency: results[1],
                     status: 'confirmed'
                 };
             }, function () {
-                return {
-                    status: 'unconfirmed'
-                };
+                return unconfirmed;
             });
         };
 

@@ -70,7 +70,7 @@ describe('bin.price', function () {
                 configReaderDeferred.reject();
                 $rootScope.$digest();
 
-                expect(rejected).toBeTruthy();
+                expect(resolved).toEqual('');
             });
         });
 
@@ -112,7 +112,7 @@ describe('bin.price', function () {
                 configReaderDeferred.reject();
                 $rootScope.$digest();
 
-                expect(rejected).toBeTruthy();
+                expect(resolved).toEqual(0);
             });
         });
 
@@ -333,6 +333,23 @@ describe('bin.price', function () {
                 });
             });
 
+            describe('on success with empty countryCode', function () {
+                beforeEach(function () {
+                    getVatOnPriceInterpretedAsDeferred.resolve('included');
+                    getCountryCodeDeferred.resolve('');
+                    getDefaultVatRateDeferred.resolve('RATE');
+                    getCurrencyDeferred.resolve({code:'CUR', symbol:'S'});
+
+                    $rootScope.$digest();
+                });
+
+                it('status is unconfirmed', function () {
+                    expect(settings).toEqual({
+                        status: 'unconfirmed'
+                    });
+                });
+            });
+
             describe('when one of the values is rejected', function () {
                 beforeEach(function () {
                     getVatOnPriceInterpretedAsDeferred.resolve('included');
@@ -343,7 +360,7 @@ describe('bin.price', function () {
                     $rootScope.$digest();
                 });
 
-                it('is rejected', function () {
+                it('status is unconfirmed', function () {
                     expect(settings).toEqual({
                         status: 'unconfirmed'
                     });
