@@ -1,0 +1,60 @@
+{
+  "msgs": {
+    "nl": {
+      "price.add.button": "Voeg een prijs toe",
+      "price.label": "Prijs",
+      "price.vat.incl.label": "(BTW incl.)",
+      "price.vat.excl.label": "(BTW excl.)",
+      "price.vat.included.label": "Vul prijs in inclusief BTW.",
+      "price.invalid": "Ongeldige prijs",
+      "price.config.button": "Instellingen",
+      "price.config.vat.country.code.label": "In welk land is uw bedrijf geregistreerd?",
+      "price.config.vat.rate.label": "Welk BTW percentage wil je hanteren?",
+      "price.config.currency.label": "In welke valuta moeten de prijzen worden weergegeven?",
+      "price.try.again.button": "Probeer opnieuw",
+      "price.generic.error": "Er is iets misgegaan. Gelieve opnieuw te proberen."
+    },
+    "en": {
+      "price.add.button": "Add a price",
+      "price.label": "Price",
+      "price.vat.incl.label": "(VAT incl.)",
+      "price.vat.excl.label": "(VAT excl.)",
+      "price.vat.included.label": "Input price with VAT included.",
+      "price.invalid": "Invalid price",
+      "price.config.button": "Settings",
+      "price.config.vat.country.code.label": "In what country is your company registered?",
+      "price.config.vat.rate.label": "What is the VAT rate you want to apply?",
+      "price.config.currency.label": "In what currency should the prices be displayed?",
+      "price.try.again.button": "Try again",
+      "price.generic.error": "Something went wrong. Please try again."
+    },
+    "fr": {
+      "price.add.button": "Ajouter prix",
+      "price.label": "Prix",
+      "price.vat.incl.label": "(TVA incl.)",
+      "price.vat.excl.label": "(TVA excl.)",
+      "price.vat.included.label": "Mettez le prix TVA inclus.",
+      "price.invalid": "Prix incorrect",
+      "price.config.button": "Settings",
+      "price.config.vat.country.code.label": "Pays d'immatriculation de votre société?",
+      "price.config.vat.rate.label": "Taux TVA?",
+      "price.config.currency.label": "Dans quelle devise les prix doivent être affichés?",
+      "price.try.again.button": "Try again",
+      "price.generic.error": "Something went wrong. Please try again."
+    },
+    "de": {
+      "price.add.button": "Add a price",
+      "price.label": "Price",
+      "price.vat.incl.label": "(VAT incl.)",
+      "price.vat.excl.label": "(VAT excl.)",
+      "price.vat.included.label": "Input price with VAT included.",
+      "price.invalid": "Invalid price",
+      "price.config.button": "Settings",
+      "price.config.vat.country.code.label": "In what country is your company registered?",
+      "price.config.vat.rate.label": "What is the VAT rate you want to apply?",
+      "price.config.currency.label": "In what currency should the prices be displayed?",
+      "price.try.again.button": "Try again",
+      "price.generic.error": "Something went wrong. Please try again."
+    }
+  }
+}

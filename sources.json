@@ -1,0 +1,8 @@
+{
+  "default": {
+    "bin.price.services": "bower_components/binarta.price.angular/src/services/priceServices.js",
+    "bin.price": "bower_components/binarta.price.angular/src/price.js",
+    "bin.price.templates": "bower_components/binarta.price.angular/src/price-tpls.js",
+    "bin.price.clerk.templates": "bower_components/binarta.price.angular/src/price-clerk-tpls-bootstrap3.js"
+  }
+}
