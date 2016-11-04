@@ -132,6 +132,7 @@
         };
 
         this.updateCurrency = function (code) {
+            var deferred = $q.defer();
             rest({
                 params: {
                     method: 'POST',
@@ -154,8 +155,12 @@
                     }
                 }).then(function (result) {
                     currency = result.data;
+                    deferred.resolve();
+                }, function () {
+                    deferred.reject();
                 });
             });
+            return deferred.promise;
         };
 
         this.updateVatOnPriceInterpretedAs = function (value) {

@@ -466,8 +466,14 @@ describe('bin.price', function () {
         });
 
         describe('on updateCurrency', function () {
+            var resolved, rejected;
+
             beforeEach(function () {
-                sut.updateCurrency('NEW');
+                sut.updateCurrency('NEW').then(function () {
+                    resolved = true;
+                }, function () {
+                    rejected = true;
+                });
             });
 
             it('active currency is persisted', function () {
@@ -505,6 +511,28 @@ describe('bin.price', function () {
                             method: 'GET',
                             url: 'baseUri/api/usecase?h.usecase=get.active.currency&h.namespace=namespace'
                         }
+                    });
+                });
+
+                describe('on get new active currency success', function () {
+                    beforeEach(function () {
+                        getDeferred.resolve({});
+                        $rootScope.$digest();
+                    });
+
+                    it('updateCurrency is resolved', function () {
+                        expect(resolved).toBeTruthy();
+                    });
+                });
+
+                describe('on get new active currency rejected', function () {
+                    beforeEach(function () {
+                        getDeferred.reject();
+                        $rootScope.$digest();
+                    });
+
+                    it('updateCurrency is rejected', function () {
+                        expect(rejected).toBeTruthy();
                     });
                 });
 
