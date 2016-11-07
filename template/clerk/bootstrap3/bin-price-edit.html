@@ -97,7 +97,9 @@
     </div>
     <div class="bin-menu-edit-actions">
         <button ng-if="state.submit" type="submit" class="btn btn-primary" ng-disabled="working"
-                i18n code="clerk.menu.save.button" read-only ng-bind="::var">
+                i18n code="clerk.menu.save.button" read-only>
+            <span ng-show="working"><i class="fa fa-spinner fa-spin fa-fw"></i></span>
+            <span ng-bind="::var"></span>
         </button>
 
         <button ng-if="state.tryAgain" type="button" class="btn btn-primary" ng-disabled="working"
