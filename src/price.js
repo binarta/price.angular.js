@@ -61,6 +61,7 @@
                 function UnconfirmedState() {
                     var state = this;
                     state.name = 'unconfirmed';
+                    scope.working = false;
 
                     state.close = editModeRenderer.close;
 
@@ -75,6 +76,7 @@
                 function ConfigState(settings) {
                     var state = this;
                     state.name = 'config';
+                    scope.working = false;
 
                     state.cancel = function () {
                         scope.state = new ConfirmedState(settings);
@@ -91,6 +93,7 @@
                 function ConfirmedState(settings) {
                     var state = this;
                     state.name = 'confirmed';
+                    scope.working = false;
                     state.close = editModeRenderer.close;
                     state.currency = settings.currency;
                     state.vatOnPrice = settings.vatOnPriceInterpretedAs == 'included';
@@ -173,26 +176,11 @@
                         country: scope.state.country,
                         vatRate: scope.state.vatRate,
                         currency: scope.state.currency
-                    }).then(onUpdateSuccess, onUpdateError);
+                    }).then(onUpdateSuccess, transitionToErrorState);
 
                     function onUpdateSuccess() {
                         if (ctrl.onConfigChanged) ctrl.onConfigChanged();
-                        priceSettings.getPriceSettings().then(onPriceSettingsSuccess, onPriceSettingsError);
-                    }
-
-                    function onPriceSettingsSuccess(settings) {
-                        scope.working = false;
-                        scope.state = new ConfirmedState(settings);
-                    }
-
-                    function onPriceSettingsError() {
-                        scope.working = false;
-                        transitionToErrorState();
-                    }
-
-                    function onUpdateError() {
-                        scope.working = false;
-                        transitionToErrorState()
+                        initialize();
                     }
                 }
 
