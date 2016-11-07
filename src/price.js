@@ -7,7 +7,8 @@
 
         this.bindings = {
             item: '<catalogItem',
-            readOnly: '@'
+            readOnly: '@',
+            onConfigChanged: '&'
         };
 
         this.controller = ['$scope', 'binPriceSettings', 'topicRegistry', 'editModeRenderer', 'updateCatalogItem', function ($scope, priceSettings, topics, editModeRenderer, updateCatalogItem) {
@@ -175,6 +176,7 @@
                     }).then(onUpdateSuccess, onUpdateError);
 
                     function onUpdateSuccess() {
+                        if (ctrl.onConfigChanged) ctrl.onConfigChanged();
                         priceSettings.getPriceSettings().then(onPriceSettingsSuccess, onPriceSettingsError);
                     }
 

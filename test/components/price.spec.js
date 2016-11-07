@@ -44,8 +44,11 @@ describe('bin.price', function () {
         });
 
         describe('when component is not set in read-only mode', function () {
+            var onConfigChangedSpy;
+
             beforeEach(function () {
-                component = $componentController('binPrice', null, {item: catalogItem});
+                onConfigChangedSpy = jasmine.createSpy('onConfigChanged');
+                component = $componentController('binPrice', null, {item: catalogItem, onConfigChanged: onConfigChangedSpy});
             });
 
             it('subscribed to edit.mode event', function () {
@@ -178,6 +181,10 @@ describe('bin.price', function () {
                                             priceSettings.getPriceSettings.and.returnValue(priceSettings.getPriceSettingsDeferred.promise);
                                             priceSettings.updatePriceConfigDeferred.resolve();
                                             scope.$digest();
+                                        });
+
+                                        it('onConfigChanged handler is executed', function () {
+                                            expect(onConfigChangedSpy).toHaveBeenCalled();
                                         });
 
                                         it('price settings are requested', function () {
