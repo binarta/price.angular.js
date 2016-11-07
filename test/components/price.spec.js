@@ -131,6 +131,28 @@ describe('bin.price', function () {
                                     it('vatRate is updated', function () {
                                         expect(scope.state.vatRate).toEqual(2.3);
                                     });
+
+                                    describe('and standard_rate is undefined', function () {
+                                        beforeEach(function () {
+                                            priceConfig.vatRates.B.standard_rate = undefined;
+                                            scope.state.getStandardVatRate();
+                                        });
+
+                                        it('vatRate is updated', function () {
+                                            expect(scope.state.vatRate).toEqual(0);
+                                        });
+                                    });
+
+                                    describe('and country is not given', function () {
+                                        beforeEach(function () {
+                                            delete priceConfig.vatRates.B;
+                                            scope.state.getStandardVatRate();
+                                        });
+
+                                        it('vatRate is updated', function () {
+                                            expect(scope.state.vatRate).toEqual(0);
+                                        });
+                                    });
                                 });
 
                                 describe('on submit', function () {

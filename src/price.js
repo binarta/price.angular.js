@@ -161,7 +161,7 @@
 
                     state.getStandardVatRate = function () {
                         var rate = state.vatRates[state.country];
-                        state.vatRate = rate ? parseFloat(rate.standard_rate) : rate;
+                        state.vatRate = rate ? parseFloat(rate.standard_rate || 0) : 0;
                     };
                 }
 
