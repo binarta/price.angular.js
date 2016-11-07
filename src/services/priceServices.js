@@ -126,7 +126,7 @@
         };
 
         this.updateVatRate = function (rate) {
-            return writer({key: defaultVatRateKey, value: (rate / 100)}).then(function () {
+            return writer({key: defaultVatRateKey, value: ((rate || 0) / 100)}).then(function () {
                 vatRatePromise = undefined;
             });
         };

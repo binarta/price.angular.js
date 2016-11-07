@@ -463,6 +463,17 @@ describe('bin.price', function () {
 
                 expect(updated).toEqual(false);
             });
+
+            describe('with invalid vat rate', function () {
+                beforeEach(function () {
+                    configWriter.calls.reset();
+                    sut.updateVatRate();
+                });
+
+                it('fallback to 0', function () {
+                    expect(configWriter).toHaveBeenCalledWith({key: 'shop.default.vat.rate', value: 0});
+                });
+            });
         });
 
         describe('on updateCurrency', function () {
