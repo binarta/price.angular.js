@@ -519,8 +519,14 @@ describe('bin.price', function () {
                 it('get new active currency', function () {
                     expect(rest.calls.mostRecent().args[0]).toEqual({
                         params: {
-                            method: 'GET',
-                            url: 'baseUri/api/usecase?h.usecase=get.active.currency&h.namespace=namespace'
+                            method: 'POST',
+                            url: 'baseUri/api/usecase',
+                            data: {
+                                headers: {
+                                    usecase: 'get.active.currency',
+                                    namespace: 'namespace'
+                                }
+                            }
                         }
                     });
                 });

@@ -148,12 +148,7 @@
                     }
                 }
             }).finally(function () {
-                rest({
-                    params: {
-                        method: 'GET',
-                        url: config.baseUri + 'api/usecase?h.usecase=get.active.currency&h.namespace=' + config.namespace
-                    }
-                }).then(function (result) {
+                getUpdatedCurrency(function (result) {
                     currency = result.data;
                     deferred.resolve();
                 }, function () {
@@ -162,6 +157,21 @@
             });
             return deferred.promise;
         };
+
+        function getUpdatedCurrency(onSuccess, onError) {
+            rest({
+                params: {
+                    method: 'POST',
+                    url: config.baseUri + 'api/usecase',
+                    data: {
+                        headers: {
+                            usecase: 'get.active.currency',
+                            namespace: config.namespace
+                        }
+                    }
+                }
+            }).then(onSuccess, onError);
+        }
 
         this.updateVatOnPriceInterpretedAs = function (value) {
             return writer({key: vatOnPriceKey, value: value}).then(function () {
