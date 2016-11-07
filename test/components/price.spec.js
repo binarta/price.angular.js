@@ -44,10 +44,12 @@ describe('bin.price', function () {
         });
 
         describe('when component is not set in read-only mode', function () {
-            var onConfigChangedSpy;
+            var onConfigChangedSpy, onConfigChangedDeferred;
 
             beforeEach(function () {
+                onConfigChangedDeferred = $q.defer();
                 onConfigChangedSpy = jasmine.createSpy('onConfigChanged');
+                onConfigChangedSpy.and.returnValue(onConfigChangedDeferred.promise);
                 component = $componentController('binPrice', null, {item: catalogItem, onConfigChanged: onConfigChangedSpy});
             });
 
@@ -187,28 +189,45 @@ describe('bin.price', function () {
                                             expect(onConfigChangedSpy).toHaveBeenCalled();
                                         });
 
-                                        it('price settings are requested', function () {
-                                            expect(priceSettings.getPriceSettings).toHaveBeenCalled();
+                                        describe('onConfigChanged success', function () {
+                                            beforeEach(function () {
+                                                onConfigChangedDeferred.resolve();
+                                            });
+
+                                            it('price settings are requested', function () {
+                                                expect(priceSettings.getPriceSettings).toHaveBeenCalled();
+                                            });
+
+                                            describe('on price settings request success', function () {
+                                                beforeEach(function () {
+                                                    priceSettings.getPriceSettingsDeferred.resolve({});
+                                                    scope.$digest();
+                                                });
+
+                                                it('is in confirmed state', function () {
+                                                    expect(scope.state.name).toEqual('confirmed');
+                                                });
+
+                                                it('is not working', function () {
+                                                    expect(scope.working).toBeFalsy();
+                                                });
+                                            });
+
+                                            describe('on price settings request rejected', function () {
+                                                beforeEach(function () {
+                                                    priceSettings.getPriceSettingsDeferred.reject();
+                                                    scope.$digest();
+                                                });
+
+                                                it('is in error state', function () {
+                                                    expect(scope.state.name).toEqual('error');
+                                                });
+                                            });
                                         });
 
-                                        describe('on price settings request success', function () {
+                                        describe('onConfigChanged error', function () {
                                             beforeEach(function () {
-                                                priceSettings.getPriceSettingsDeferred.resolve({});
-                                                scope.$digest();
-                                            });
-
-                                            it('is in confirmed state', function () {
-                                                expect(scope.state.name).toEqual('confirmed');
-                                            });
-
-                                            it('is not working', function () {
-                                                expect(scope.working).toBeFalsy();
-                                            });
-                                        });
-
-                                        describe('on price settings request rejected', function () {
-                                            beforeEach(function () {
-                                                priceSettings.getPriceSettingsDeferred.reject();
+                                                onConfigChangedDeferred.reject();
                                                 scope.$digest();
                                             });
 

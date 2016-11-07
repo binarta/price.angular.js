@@ -179,8 +179,8 @@
                     }).then(onUpdateSuccess, transitionToErrorState);
 
                     function onUpdateSuccess() {
-                        if (ctrl.onConfigChanged) ctrl.onConfigChanged();
-                        initialize();
+                        if (ctrl.onConfigChanged) ctrl.onConfigChanged().then(initialize, transitionToErrorState);
+                        else initialize();
                     }
                 }
 
