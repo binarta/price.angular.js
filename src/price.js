@@ -1,5 +1,5 @@
 (function () {
-    angular.module('bin.price', ['bin.price.services', 'bin.price.templates', 'toggle.edit.mode', 'catalog', 'notifications'])
+    angular.module('bin.price', ['bin.price.services', 'bin.price.templates', 'toggle.edit.mode', 'catalog', 'notifications', 'binarta-checkpointjs-angular1'])
         .component('binPrice', new BinPriceComponent());
 
     function BinPriceComponent() {
@@ -11,7 +11,7 @@
             onConfigChanged: '&'
         };
 
-        this.controller = ['$scope', 'binPriceSettings', 'topicRegistry', 'editModeRenderer', 'updateCatalogItem', function ($scope, priceSettings, topics, editModeRenderer, updateCatalogItem) {
+        this.controller = ['$scope', 'binPriceSettings', 'topicRegistry', 'editModeRenderer', 'updateCatalogItem', 'binarta', function ($scope, priceSettings, topics, editModeRenderer, updateCatalogItem, binarta) {
             var ctrl = this, destroyHandlers = [];
 
             if (isInReadOnlyMode()) ctrl.state = new ReadOnlyState();
@@ -52,7 +52,11 @@
             }
 
             function updateEditState() {
-                ctrl.state = ctrl.item.presentableUnitPrice ? new UpdateState() : new AddState();
+                ctrl.state = isPermitted() ? ctrl.item.presentableUnitPrice ? new UpdateState() : new AddState() : new ReadOnlyState();
+            }
+
+            function isPermitted() {
+                return binarta.checkpoint.profile.hasPermission('catalog.item.update');
             }
 
             function updatePrice() {

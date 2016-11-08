@@ -2,15 +2,16 @@ describe('bin.price', function () {
     beforeEach(module('bin.price'));
 
     describe('binPrice component', function () {
-        var $componentController, $q, component, priceSettings, topics, edit, catalogItem, updateCatalogItem;
+        var $componentController, $q, component, priceSettings, topics, edit, catalogItem, updateCatalogItem, binarta;
 
-        beforeEach(inject(function (_$q_, _$componentController_, binPriceSettings, topicRegistry, editModeRenderer, _updateCatalogItem_) {
+        beforeEach(inject(function (_$q_, _$componentController_, binPriceSettings, topicRegistry, editModeRenderer, _updateCatalogItem_, _binarta_) {
             $q = _$q_;
             $componentController = _$componentController_;
             priceSettings = binPriceSettings;
             topics = topicRegistry;
             edit = editModeRenderer;
             updateCatalogItem = _updateCatalogItem_;
+            binarta = _binarta_;
             catalogItem = {
                 id: 'id',
                 type: 'type',
@@ -67,155 +68,192 @@ describe('bin.price', function () {
                 });
             });
 
-            describe('when in edit mode', function () {
+            describe('when user has no permission', function () {
                 beforeEach(function () {
-                    topics.subscribe.calls.mostRecent().args[1](true);
+                    binarta.checkpoint.profile.hasPermission.and.returnValue(false);
                 });
 
-                it('component is in add state', function () {
-                    expect(component.state.name).toEqual('add');
-                });
-
-                describe('on updatePrice', function () {
+                describe('when in edit mode', function () {
                     beforeEach(function () {
-                        component.updatePrice();
+                        topics.subscribe.calls.mostRecent().args[1](true);
                     });
 
-                    it('edit-mode renderer is opened', function () {
-                        expect(edit.open).toHaveBeenCalledWith({
-                            templateUrl: 'bin-price-edit.html',
-                            scope: jasmine.any(Object)
-                        });
+                    it('component is in readOnly state', function () {
+                        expect(component.state.name).toEqual('readOnly');
+                    });
+                });
+            });
+
+            describe('when user has permission', function () {
+                beforeEach(function () {
+                    binarta.checkpoint.profile.hasPermission.and.returnValue(true);
+                });
+
+                describe('when in edit mode', function () {
+                    beforeEach(function () {
+                        topics.subscribe.calls.mostRecent().args[1](true);
                     });
 
-                    it('price settings are requested', function () {
-                        expect(priceSettings.getPriceSettings).toHaveBeenCalled();
+                    it('permission is checked', function () {
+                        expect(binarta.checkpoint.profile.hasPermission).toHaveBeenCalledWith('catalog.item.update');
                     });
 
-                    describe('with edit-mode renderer scope', function () {
-                        var scope;
+                    it('component is in add state', function () {
+                        expect(component.state.name).toEqual('add');
+                    });
 
+                    describe('on updatePrice', function () {
                         beforeEach(function () {
-                            scope = edit.open.calls.mostRecent().args[0].scope;
+                            component.updatePrice();
                         });
 
-                        function assertPriceConfig() {
-                            it('price config is requested', function () {
-                                expect(priceSettings.getPriceConfig).toHaveBeenCalled();
+                        it('edit-mode renderer is opened', function () {
+                            expect(edit.open).toHaveBeenCalledWith({
+                                templateUrl: 'bin-price-edit.html',
+                                scope: jasmine.any(Object)
+                            });
+                        });
+
+                        it('price settings are requested', function () {
+                            expect(priceSettings.getPriceSettings).toHaveBeenCalled();
+                        });
+
+                        describe('with edit-mode renderer scope', function () {
+                            var scope;
+
+                            beforeEach(function () {
+                                scope = edit.open.calls.mostRecent().args[0].scope;
                             });
 
-                            describe('with price config', function () {
-                                var priceConfig = {
-                                    country: 'B',
-                                    countries: ['B'],
-                                    vatRate: 1.1,
-                                    vatRates: {B: {standard_rate: 2.3}},
-                                    currency: 'C',
-                                    currencies: ['C']
-                                };
-
-                                beforeEach(function () {
-                                    priceSettings.getPriceConfigDeferred.resolve(priceConfig);
-                                    scope.$digest();
+                            function assertPriceConfig() {
+                                it('price config is requested', function () {
+                                    expect(priceSettings.getPriceConfig).toHaveBeenCalled();
                                 });
 
-                                it('config is available', function () {
-                                    expect(scope.state.country).toEqual(priceConfig.country);
-                                    expect(scope.state.countries).toEqual(priceConfig.countries);
-                                    expect(scope.state.vatRate).toEqual(priceConfig.vatRate);
-                                    expect(scope.state.vatRates).toEqual(priceConfig.vatRates);
-                                    expect(scope.state.currency).toEqual(priceConfig.currency);
-                                    expect(scope.state.currencies).toEqual(priceConfig.currencies);
-                                });
+                                describe('with price config', function () {
+                                    var priceConfig = {
+                                        country: 'B',
+                                        countries: ['B'],
+                                        vatRate: 1.1,
+                                        vatRates: {B: {standard_rate: 2.3}},
+                                        currency: 'C',
+                                        currencies: ['C']
+                                    };
 
-                                describe('on getStandardVatRate', function () {
                                     beforeEach(function () {
-                                        scope.state.getStandardVatRate();
+                                        priceSettings.getPriceConfigDeferred.resolve(priceConfig);
+                                        scope.$digest();
                                     });
 
-                                    it('vatRate is updated', function () {
-                                        expect(scope.state.vatRate).toEqual(2.3);
+                                    it('config is available', function () {
+                                        expect(scope.state.country).toEqual(priceConfig.country);
+                                        expect(scope.state.countries).toEqual(priceConfig.countries);
+                                        expect(scope.state.vatRate).toEqual(priceConfig.vatRate);
+                                        expect(scope.state.vatRates).toEqual(priceConfig.vatRates);
+                                        expect(scope.state.currency).toEqual(priceConfig.currency);
+                                        expect(scope.state.currencies).toEqual(priceConfig.currencies);
                                     });
 
-                                    describe('and standard_rate is undefined', function () {
+                                    describe('on getStandardVatRate', function () {
                                         beforeEach(function () {
-                                            priceConfig.vatRates.B.standard_rate = undefined;
                                             scope.state.getStandardVatRate();
                                         });
 
                                         it('vatRate is updated', function () {
-                                            expect(scope.state.vatRate).toEqual(0);
-                                        });
-                                    });
-
-                                    describe('and country is not given', function () {
-                                        beforeEach(function () {
-                                            delete priceConfig.vatRates.B;
-                                            scope.state.getStandardVatRate();
+                                            expect(scope.state.vatRate).toEqual(2.3);
                                         });
 
-                                        it('vatRate is updated', function () {
-                                            expect(scope.state.vatRate).toEqual(0);
-                                        });
-                                    });
-                                });
-
-                                describe('on submit', function () {
-                                    beforeEach(function () {
-                                        scope.submit();
-                                    });
-
-                                    it('is working', function () {
-                                        expect(scope.working).toBeTruthy();
-                                    });
-
-                                    it('request is made for updatePriceConfig', function () {
-                                        expect(priceSettings.updatePriceConfig).toHaveBeenCalledWith({
-                                            country: priceConfig.country,
-                                            vatRate: priceConfig.vatRate,
-                                            currency: priceConfig.currency
-                                        });
-                                    });
-
-                                    describe('on update success', function () {
-                                        beforeEach(function () {
-                                            priceSettings.getPriceSettingsDeferred = $q.defer();
-                                            priceSettings.getPriceSettings.and.returnValue(priceSettings.getPriceSettingsDeferred.promise);
-                                            priceSettings.updatePriceConfigDeferred.resolve();
-                                            scope.$digest();
-                                        });
-
-                                        it('onConfigChanged handler is executed', function () {
-                                            expect(onConfigChangedSpy).toHaveBeenCalled();
-                                        });
-
-                                        describe('onConfigChanged success', function () {
+                                        describe('and standard_rate is undefined', function () {
                                             beforeEach(function () {
-                                                onConfigChangedDeferred.resolve();
+                                                priceConfig.vatRates.B.standard_rate = undefined;
+                                                scope.state.getStandardVatRate();
                                             });
 
-                                            it('price settings are requested', function () {
-                                                expect(priceSettings.getPriceSettings).toHaveBeenCalled();
+                                            it('vatRate is updated', function () {
+                                                expect(scope.state.vatRate).toEqual(0);
+                                            });
+                                        });
+
+                                        describe('and country is not given', function () {
+                                            beforeEach(function () {
+                                                delete priceConfig.vatRates.B;
+                                                scope.state.getStandardVatRate();
                                             });
 
-                                            describe('on price settings request success', function () {
+                                            it('vatRate is updated', function () {
+                                                expect(scope.state.vatRate).toEqual(0);
+                                            });
+                                        });
+                                    });
+
+                                    describe('on submit', function () {
+                                        beforeEach(function () {
+                                            scope.submit();
+                                        });
+
+                                        it('is working', function () {
+                                            expect(scope.working).toBeTruthy();
+                                        });
+
+                                        it('request is made for updatePriceConfig', function () {
+                                            expect(priceSettings.updatePriceConfig).toHaveBeenCalledWith({
+                                                country: priceConfig.country,
+                                                vatRate: priceConfig.vatRate,
+                                                currency: priceConfig.currency
+                                            });
+                                        });
+
+                                        describe('on update success', function () {
+                                            beforeEach(function () {
+                                                priceSettings.getPriceSettingsDeferred = $q.defer();
+                                                priceSettings.getPriceSettings.and.returnValue(priceSettings.getPriceSettingsDeferred.promise);
+                                                priceSettings.updatePriceConfigDeferred.resolve();
+                                                scope.$digest();
+                                            });
+
+                                            it('onConfigChanged handler is executed', function () {
+                                                expect(onConfigChangedSpy).toHaveBeenCalled();
+                                            });
+
+                                            describe('onConfigChanged success', function () {
                                                 beforeEach(function () {
-                                                    priceSettings.getPriceSettingsDeferred.resolve({});
-                                                    scope.$digest();
+                                                    onConfigChangedDeferred.resolve();
                                                 });
 
-                                                it('is in confirmed state', function () {
-                                                    expect(scope.state.name).toEqual('confirmed');
+                                                it('price settings are requested', function () {
+                                                    expect(priceSettings.getPriceSettings).toHaveBeenCalled();
                                                 });
 
-                                                it('is not working', function () {
-                                                    expect(scope.working).toBeFalsy();
+                                                describe('on price settings request success', function () {
+                                                    beforeEach(function () {
+                                                        priceSettings.getPriceSettingsDeferred.resolve({});
+                                                        scope.$digest();
+                                                    });
+
+                                                    it('is in confirmed state', function () {
+                                                        expect(scope.state.name).toEqual('confirmed');
+                                                    });
+
+                                                    it('is not working', function () {
+                                                        expect(scope.working).toBeFalsy();
+                                                    });
+                                                });
+
+                                                describe('on price settings request rejected', function () {
+                                                    beforeEach(function () {
+                                                        priceSettings.getPriceSettingsDeferred.reject();
+                                                        scope.$digest();
+                                                    });
+
+                                                    it('is in error state', function () {
+                                                        expect(scope.state.name).toEqual('error');
+                                                    });
                                                 });
                                             });
 
-                                            describe('on price settings request rejected', function () {
+                                            describe('onConfigChanged error', function () {
                                                 beforeEach(function () {
-                                                    priceSettings.getPriceSettingsDeferred.reject();
+                                                    onConfigChangedDeferred.reject();
                                                     scope.$digest();
                                                 });
 
@@ -225,9 +263,127 @@ describe('bin.price', function () {
                                             });
                                         });
 
-                                        describe('onConfigChanged error', function () {
+                                        describe('on update rejected', function () {
                                             beforeEach(function () {
-                                                onConfigChangedDeferred.reject();
+                                                priceSettings.updatePriceConfigDeferred.reject();
+                                                scope.$digest();
+                                            });
+
+                                            it('is in error state', function () {
+                                                expect(scope.state.name).toEqual('error');
+                                            });
+
+                                            it('is not working', function () {
+                                                expect(scope.working).toBeFalsy();
+                                            });
+                                        });
+                                    });
+                                });
+
+                                describe('error requesting price config', function () {
+                                    beforeEach(function () {
+                                        priceSettings.getPriceConfigDeferred.reject();
+                                        scope.$digest();
+                                    });
+
+                                    it('is in error state', function () {
+                                        expect(scope.state.name).toEqual('error');
+                                    });
+
+                                    describe('on try again', function () {
+                                        beforeEach(function () {
+                                            scope.state.tryAgain();
+                                        });
+
+                                        it('price settings are requested', function () {
+                                            expect(priceSettings.getPriceSettings).toHaveBeenCalled();
+                                        });
+                                    });
+
+                                    describe('on close', function () {
+                                        beforeEach(function () {
+                                            scope.state.close();
+                                        });
+
+                                        it('edit-mode renderer is closed', function () {
+                                            expect(edit.close).toHaveBeenCalled();
+                                        });
+                                    });
+                                });
+                            }
+
+                            describe('and price settings are unconfirmed', function () {
+                                beforeEach(function () {
+                                    priceSettings.getPriceSettingsDeferred.resolve({status: 'unconfirmed'});
+                                    scope.$digest();
+                                });
+
+                                it('is in unconfirmed state', function () {
+                                    expect(scope.state.name).toEqual('unconfirmed');
+                                });
+
+                                describe('on close', function () {
+                                    beforeEach(function () {
+                                        scope.state.close();
+                                    });
+
+                                    it('edit-mode renderer is closed', function () {
+                                        expect(edit.close).toHaveBeenCalled();
+                                    });
+                                });
+
+                                assertPriceConfig();
+                            });
+
+                            describe('and price settings are confirmed', function () {
+                                var settings;
+
+                                beforeEach(function () {
+                                    settings = {
+                                        status: 'confirmed',
+                                        currency: {symbol: 'E'}
+                                    };
+                                });
+
+                                describe('when vatOnPriceInterpretedAs is included', function () {
+                                    beforeEach(function () {
+                                        settings.vatOnPriceInterpretedAs = 'included';
+                                        priceSettings.getPriceSettingsDeferred.resolve(settings);
+                                        scope.$digest();
+                                    });
+
+                                    it('vatOnPrice is enabled', function () {
+                                        expect(scope.state.vatOnPrice).toBeTruthy();
+                                    });
+
+                                    it('price is derived from item unitPrice', function () {
+                                        expect(scope.state.price).toEqual(1.25);
+                                    });
+
+                                    describe('on toggleVatOnPrice', function () {
+                                        beforeEach(function () {
+                                            scope.state.toggleVatOnPrice();
+                                        });
+
+                                        it('request is made for updateVatOnPriceInterpretedAs', function () {
+                                            expect(priceSettings.updateVatOnPriceInterpretedAs).toHaveBeenCalledWith('included');
+                                        });
+
+                                        describe('on success', function () {
+                                            beforeEach(function () {
+                                                component.item.unitPrice = 500;
+                                                priceSettings.updateVatOnPriceInterpretedAsDeferred.resolve();
+                                                scope.$digest();
+                                            });
+
+                                            it('price is refreshed', function () {
+                                                expect(scope.state.price).toEqual(5);
+                                            });
+                                        });
+
+                                        describe('on error', function () {
+                                            beforeEach(function () {
+                                                priceSettings.updateVatOnPriceInterpretedAsDeferred.reject();
                                                 scope.$digest();
                                             });
 
@@ -237,293 +393,164 @@ describe('bin.price', function () {
                                         });
                                     });
 
-                                    describe('on update rejected', function () {
+                                    describe('on openConfig', function () {
                                         beforeEach(function () {
-                                            priceSettings.updatePriceConfigDeferred.reject();
-                                            scope.$digest();
+                                            scope.state.openConfig();
                                         });
 
-                                        it('is in error state', function () {
-                                            expect(scope.state.name).toEqual('error');
+                                        it('is in config state', function () {
+                                            expect(scope.state.name).toEqual('config');
                                         });
 
-                                        it('is not working', function () {
-                                            expect(scope.working).toBeFalsy();
+                                        assertPriceConfig();
+
+                                        describe('on cancel', function () {
+                                            beforeEach(function () {
+                                                scope.state.cancel();
+                                            });
+
+                                            it('is in confirmed state', function () {
+                                                expect(scope.state.name).toEqual('confirmed');
+                                            });
                                         });
                                     });
-                                });
-                            });
 
-                            describe('error requesting price config', function () {
-                                beforeEach(function () {
-                                    priceSettings.getPriceConfigDeferred.reject();
-                                    scope.$digest();
-                                });
-
-                                it('is in error state', function () {
-                                    expect(scope.state.name).toEqual('error');
-                                });
-
-                                describe('on try again', function () {
-                                    beforeEach(function () {
-                                        scope.state.tryAgain();
-                                    });
-
-                                    it('price settings are requested', function () {
-                                        expect(priceSettings.getPriceSettings).toHaveBeenCalled();
-                                    });
-                                });
-
-                                describe('on close', function () {
-                                    beforeEach(function () {
-                                        scope.state.close();
-                                    });
-
-                                    it('edit-mode renderer is closed', function () {
-                                        expect(edit.close).toHaveBeenCalled();
-                                    });
-                                });
-                            });
-                        }
-
-                        describe('and price settings are unconfirmed', function () {
-                            beforeEach(function () {
-                                priceSettings.getPriceSettingsDeferred.resolve({status: 'unconfirmed'});
-                                scope.$digest();
-                            });
-
-                            it('is in unconfirmed state', function () {
-                                expect(scope.state.name).toEqual('unconfirmed');
-                            });
-
-                            describe('on close', function () {
-                                beforeEach(function () {
-                                    scope.state.close();
-                                });
-
-                                it('edit-mode renderer is closed', function () {
-                                    expect(edit.close).toHaveBeenCalled();
-                                });
-                            });
-
-                            assertPriceConfig();
-                        });
-
-                        describe('and price settings are confirmed', function () {
-                            var settings;
-
-                            beforeEach(function () {
-                                settings = {
-                                    status: 'confirmed',
-                                    currency: {symbol: 'E'}
-                                };
-                            });
-
-                            describe('when vatOnPriceInterpretedAs is included', function () {
-                                beforeEach(function () {
-                                    settings.vatOnPriceInterpretedAs = 'included';
-                                    priceSettings.getPriceSettingsDeferred.resolve(settings);
-                                    scope.$digest();
-                                });
-
-                                it('vatOnPrice is enabled', function () {
-                                    expect(scope.state.vatOnPrice).toBeTruthy();
-                                });
-
-                                it('price is derived from item unitPrice', function () {
-                                    expect(scope.state.price).toEqual(1.25);
-                                });
-
-                                describe('on toggleVatOnPrice', function () {
-                                    beforeEach(function () {
-                                        scope.state.toggleVatOnPrice();
-                                    });
-
-                                    it('request is made for updateVatOnPriceInterpretedAs', function () {
-                                        expect(priceSettings.updateVatOnPriceInterpretedAs).toHaveBeenCalledWith('included');
-                                    });
-
-                                    describe('on success', function () {
+                                    describe('on submit', function () {
                                         beforeEach(function () {
-                                            component.item.unitPrice = 500;
-                                            priceSettings.updateVatOnPriceInterpretedAsDeferred.resolve();
-                                            scope.$digest();
+                                            scope.state.price = 1.24999;
+                                            scope.submit();
                                         });
 
-                                        it('price is refreshed', function () {
-                                            expect(scope.state.price).toEqual(5);
-                                        });
-                                    });
-
-                                    describe('on error', function () {
-                                        beforeEach(function () {
-                                            priceSettings.updateVatOnPriceInterpretedAsDeferred.reject();
-                                            scope.$digest();
+                                        it('is working', function () {
+                                            expect(scope.working).toBeTruthy();
                                         });
 
-                                        it('is in error state', function () {
-                                            expect(scope.state.name).toEqual('error');
+                                        it('update catalog is requested', function () {
+                                            expect(updateCatalogItem).toHaveBeenCalledWith({
+                                                data: {
+                                                    id: 'id',
+                                                    type: 'type',
+                                                    price: 125,
+                                                    context: 'update'
+                                                },
+                                                success: jasmine.any(Function),
+                                                error: jasmine.any(Function)
+                                            });
+                                        });
+
+                                        describe('on update success', function () {
+                                            beforeEach(function () {
+                                                updateCatalogItem.calls.mostRecent().args[0].success();
+                                            });
+
+                                            it('edit-mode renderer is closed', function () {
+                                                expect(edit.close).toHaveBeenCalled();
+                                            });
+                                        });
+
+                                        describe('on update error', function () {
+                                            beforeEach(function () {
+                                                updateCatalogItem.calls.mostRecent().args[0].error();
+                                            });
+
+                                            it('is in error state', function () {
+                                                expect(scope.state.name).toEqual('error');
+                                            });
+
+                                            it('is not working', function () {
+                                                expect(scope.working).toBeFalsy();
+                                            });
                                         });
                                     });
                                 });
 
-                                describe('on openConfig', function () {
+                                describe('when vatOnPriceInterpretedAs is included without item unit price', function () {
                                     beforeEach(function () {
-                                        scope.state.openConfig();
+                                        component.item.unitPrice = undefined;
+                                        settings.vatOnPriceInterpretedAs = 'included';
+                                        priceSettings.getPriceSettingsDeferred.resolve(settings);
+                                        scope.$digest();
                                     });
 
-                                    it('is in config state', function () {
-                                        expect(scope.state.name).toEqual('config');
+                                    it('price is derived from item price', function () {
+                                        expect(scope.state.price).toEqual(1.1);
+                                    });
+                                });
+
+                                describe('when vatOnPriceInterpretedAs is not included', function () {
+                                    beforeEach(function () {
+                                        settings.vatOnPriceInterpretedAs = '';
+                                        priceSettings.getPriceSettingsDeferred.resolve(settings);
+                                        scope.$digest();
                                     });
 
-                                    assertPriceConfig();
+                                    it('vatOnPrice is enabled', function () {
+                                        expect(scope.state.vatOnPrice).toBeFalsy();
+                                    });
 
-                                    describe('on cancel', function () {
+                                    it('price is derived from item price', function () {
+                                        expect(scope.state.price).toEqual(1.1);
+                                    });
+
+                                    describe('on toggleVatOnPrice', function () {
                                         beforeEach(function () {
-                                            scope.state.cancel();
+                                            scope.state.toggleVatOnPrice();
                                         });
 
-                                        it('is in confirmed state', function () {
-                                            expect(scope.state.name).toEqual('confirmed');
+                                        it('request is made for updateVatOnPriceInterpretedAs', function () {
+                                            expect(priceSettings.updateVatOnPriceInterpretedAs).toHaveBeenCalledWith('excluded');
                                         });
                                     });
                                 });
 
-                                describe('on submit', function () {
+                                describe('with settings', function () {
                                     beforeEach(function () {
-                                        scope.state.price = 1.24999;
-                                        scope.submit();
+                                        priceSettings.getPriceSettingsDeferred.resolve(settings);
+                                        scope.$digest();
                                     });
 
-                                    it('is working', function () {
-                                        expect(scope.working).toBeTruthy();
+                                    it('is in confirmed state', function () {
+                                        expect(scope.state.name).toEqual('confirmed');
                                     });
 
-                                    it('update catalog is requested', function () {
-                                        expect(updateCatalogItem).toHaveBeenCalledWith({
-                                            data: {
-                                                id: 'id',
-                                                type: 'type',
-                                                price: 125,
-                                                context: 'update'
-                                            },
-                                            success: jasmine.any(Function),
-                                            error: jasmine.any(Function)
-                                        });
+                                    it('currency is available', function () {
+                                        expect(scope.state.currency).toEqual(settings.currency);
                                     });
 
-                                    describe('on update success', function () {
+                                    describe('on close', function () {
                                         beforeEach(function () {
-                                            updateCatalogItem.calls.mostRecent().args[0].success();
+                                            scope.state.close();
                                         });
 
                                         it('edit-mode renderer is closed', function () {
                                             expect(edit.close).toHaveBeenCalled();
                                         });
                                     });
-
-                                    describe('on update error', function () {
-                                        beforeEach(function () {
-                                            updateCatalogItem.calls.mostRecent().args[0].error();
-                                        });
-
-                                        it('is in error state', function () {
-                                            expect(scope.state.name).toEqual('error');
-                                        });
-
-                                        it('is not working', function () {
-                                            expect(scope.working).toBeFalsy();
-                                        });
-                                    });
                                 });
                             });
 
-                            describe('when vatOnPriceInterpretedAs is included without item unit price', function () {
+                            describe('and price settings could not be loaded', function () {
                                 beforeEach(function () {
-                                    component.item.unitPrice = undefined;
-                                    settings.vatOnPriceInterpretedAs = 'included';
-                                    priceSettings.getPriceSettingsDeferred.resolve(settings);
+                                    priceSettings.getPriceSettingsDeferred.reject();
                                     scope.$digest();
                                 });
 
-                                it('price is derived from item price', function () {
-                                    expect(scope.state.price).toEqual(1.1);
-                                });
-                            });
-
-                            describe('when vatOnPriceInterpretedAs is not included', function () {
-                                beforeEach(function () {
-                                    settings.vatOnPriceInterpretedAs = '';
-                                    priceSettings.getPriceSettingsDeferred.resolve(settings);
-                                    scope.$digest();
-                                });
-
-                                it('vatOnPrice is enabled', function () {
-                                    expect(scope.state.vatOnPrice).toBeFalsy();
-                                });
-
-                                it('price is derived from item price', function () {
-                                    expect(scope.state.price).toEqual(1.1);
-                                });
-
-                                describe('on toggleVatOnPrice', function () {
-                                    beforeEach(function () {
-                                        scope.state.toggleVatOnPrice();
-                                    });
-
-                                    it('request is made for updateVatOnPriceInterpretedAs', function () {
-                                        expect(priceSettings.updateVatOnPriceInterpretedAs).toHaveBeenCalledWith('excluded');
-                                    });
-                                });
-                            });
-
-                            describe('with settings', function () {
-                                beforeEach(function () {
-                                    priceSettings.getPriceSettingsDeferred.resolve(settings);
-                                    scope.$digest();
-                                });
-
-                                it('is in confirmed state', function () {
-                                    expect(scope.state.name).toEqual('confirmed');
-                                });
-
-                                it('currency is available', function () {
-                                    expect(scope.state.currency).toEqual(settings.currency);
-                                });
-
-                                describe('on close', function () {
-                                    beforeEach(function () {
-                                        scope.state.close();
-                                    });
-
-                                    it('edit-mode renderer is closed', function () {
-                                        expect(edit.close).toHaveBeenCalled();
-                                    });
+                                it('is in error state', function () {
+                                    expect(scope.state.name).toEqual('error');
                                 });
                             });
                         });
+                    });
 
-                        describe('and price settings could not be loaded', function () {
-                            beforeEach(function () {
-                                priceSettings.getPriceSettingsDeferred.reject();
-                                scope.$digest();
-                            });
-
-                            it('is in error state', function () {
-                                expect(scope.state.name).toEqual('error');
-                            });
+                    describe('on catalog item changes', function () {
+                        beforeEach(function () {
+                            catalogItem.presentableUnitPrice = 'price';
+                            component.$onChanges();
                         });
-                    });
-                });
 
-                describe('on catalog item changes', function () {
-                    beforeEach(function () {
-                        catalogItem.presentableUnitPrice = 'price';
-                        component.$onChanges();
-                    });
-
-                    it('component is in update state', function () {
-                        expect(component.state.name).toEqual('update');
+                        it('component is in update state', function () {
+                            expect(component.state.name).toEqual('update');
+                        });
                     });
                 });
             });
@@ -533,15 +560,39 @@ describe('bin.price', function () {
                     catalogItem.presentableUnitPrice = 'price';
                 });
 
-                describe('when in edit mode', function () {
+                describe('and user has no permission', function () {
                     beforeEach(function () {
-                        topics.subscribe.calls.mostRecent().args[1](true);
+                        binarta.checkpoint.profile.hasPermission.and.returnValue(false);
                     });
 
-                    it('component is in update state', function () {
-                        catalogItem.presentableUnitPrice = 'price';
+                    describe('when in edit mode', function () {
+                        beforeEach(function () {
+                            topics.subscribe.calls.mostRecent().args[1](true);
+                        });
 
-                        expect(component.state.name).toEqual('update');
+                        it('component is in readOnly state', function () {
+                            catalogItem.presentableUnitPrice = 'price';
+
+                            expect(component.state.name).toEqual('readOnly');
+                        });
+                    });
+                });
+
+                describe('and user has permission', function () {
+                    beforeEach(function () {
+                        binarta.checkpoint.profile.hasPermission.and.returnValue(true);
+                    });
+
+                    describe('when in edit mode', function () {
+                        beforeEach(function () {
+                            topics.subscribe.calls.mostRecent().args[1](true);
+                        });
+
+                        it('component is in update state', function () {
+                            catalogItem.presentableUnitPrice = 'price';
+
+                            expect(component.state.name).toEqual('update');
+                        });
                     });
                 });
             });
