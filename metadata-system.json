@@ -39,8 +39,8 @@
       "price.config.vat.country.code.label": "Pays d'immatriculation de votre société?",
       "price.config.vat.rate.label": "Taux TVA?",
       "price.config.currency.label": "Dans quelle devise les prix doivent être affichés?",
-      "price.try.again.button": "Try again",
-      "price.generic.error": "Something went wrong. Please try again."
+      "price.try.again.button": "Réessayer",
+      "price.generic.error": "Quelque chose a mal tourné. Veuillez réessayer."
     },
     "de": {
       "price.add.button": "Add a price",
