@@ -2,7 +2,7 @@ describe('bin.price', function () {
     beforeEach(module('bin.price'));
 
     describe('binPrice component', function () {
-        var $componentController, $q, component, priceSettings, topics, edit, catalogItem, updateCatalogItem, binarta;
+        var $componentController, $q, $ctrl, priceSettings, topics, edit, catalogItem, updateCatalogItem, binarta;
 
         beforeEach(inject(function (_$q_, _$componentController_, binPriceSettings, topicRegistry, editModeRenderer, _updateCatalogItem_, _binarta_) {
             $q = _$q_;
@@ -18,19 +18,22 @@ describe('bin.price', function () {
                 unitPrice: 125,
                 price: 110
             };
+            binarta.checkpoint.gateway.permissions = [];
+            binarta.checkpoint.registrationForm.submit({username: 'u', password: 'p', email: 'e'});
         }));
 
         describe('when component is set in read-only mode', function () {
             beforeEach(function () {
-                component = $componentController('binPrice', null, {item: catalogItem, readOnly: ''});
+                $ctrl = $componentController('binPrice', null, {item: catalogItem, readOnly: ''});
+                $ctrl.$onInit();
             });
 
             it('component is in readOnly state', function () {
-                expect(component.state.name).toEqual('readOnly');
+                expect($ctrl.state.name).toEqual('readOnly');
             });
 
             it('catalog item is available', function () {
-                expect(component.item).toEqual(catalogItem);
+                expect($ctrl.item).toEqual(catalogItem);
             });
 
             describe('on catalogItem data changes', function () {
@@ -39,7 +42,7 @@ describe('bin.price', function () {
                 });
 
                 it('updated presentableUnitPrice is available', function () {
-                    expect(component.item.presentableUnitPrice).toEqual(catalogItem.presentableUnitPrice);
+                    expect($ctrl.item.presentableUnitPrice).toEqual(catalogItem.presentableUnitPrice);
                 });
             });
         });
@@ -51,42 +54,38 @@ describe('bin.price', function () {
                 onConfigChangedDeferred = $q.defer();
                 onConfigChangedSpy = jasmine.createSpy('onConfigChanged');
                 onConfigChangedSpy.and.returnValue(onConfigChangedDeferred.promise);
-                component = $componentController('binPrice', null, {item: catalogItem, onConfigChanged: onConfigChangedSpy});
+                $ctrl = $componentController('binPrice', null, {item: catalogItem, onConfigChanged: onConfigChangedSpy});
             });
 
-            it('subscribed to edit.mode event', function () {
-                expect(topics.subscribe.calls.mostRecent().args[0]).toEqual('edit.mode');
-            });
-
-            describe('when not in edit mode', function () {
+            describe('and user has no permission', function () {
                 beforeEach(function () {
-                    topics.subscribe.calls.mostRecent().args[1](false);
+                    $ctrl.$onInit();
                 });
 
                 it('component is in readOnly state', function () {
-                    expect(component.state.name).toEqual('readOnly');
+                    expect($ctrl.state.name).toEqual('readOnly');
                 });
             });
 
-            describe('when user has no permission', function () {
+            describe('and user has catalog.item.update permission', function () {
                 beforeEach(function () {
-                    binarta.checkpoint.profile.hasPermission.and.returnValue(false);
+                    $ctrl.$onInit();
+                    binarta.checkpoint.gateway.addPermission('catalog.item.update');
+                    binarta.checkpoint.profile.refresh();
                 });
 
-                describe('when in edit mode', function () {
+                it('subscribed to edit.mode event', function () {
+                    expect(topics.subscribe.calls.mostRecent().args[0]).toEqual('edit.mode');
+                });
+
+                describe('when not in edit mode', function () {
                     beforeEach(function () {
-                        topics.subscribe.calls.mostRecent().args[1](true);
+                        topics.subscribe.calls.mostRecent().args[1](false);
                     });
 
                     it('component is in readOnly state', function () {
-                        expect(component.state.name).toEqual('readOnly');
+                        expect($ctrl.state.name).toEqual('readOnly');
                     });
-                });
-            });
-
-            describe('when user has permission', function () {
-                beforeEach(function () {
-                    binarta.checkpoint.profile.hasPermission.and.returnValue(true);
                 });
 
                 describe('when in edit mode', function () {
@@ -94,17 +93,13 @@ describe('bin.price', function () {
                         topics.subscribe.calls.mostRecent().args[1](true);
                     });
 
-                    it('permission is checked', function () {
-                        expect(binarta.checkpoint.profile.hasPermission).toHaveBeenCalledWith('catalog.item.update');
-                    });
-
                     it('component is in add state', function () {
-                        expect(component.state.name).toEqual('add');
+                        expect($ctrl.state.name).toEqual('add');
                     });
 
                     describe('on updatePrice', function () {
                         beforeEach(function () {
-                            component.updatePrice();
+                            $ctrl.updatePrice();
                         });
 
                         it('edit-mode renderer is opened', function () {
@@ -371,7 +366,7 @@ describe('bin.price', function () {
 
                                         describe('on success', function () {
                                             beforeEach(function () {
-                                                component.item.unitPrice = 500;
+                                                $ctrl.item.unitPrice = 500;
                                                 priceSettings.updateVatOnPriceInterpretedAsDeferred.resolve();
                                                 scope.$digest();
                                             });
@@ -466,7 +461,7 @@ describe('bin.price', function () {
 
                                 describe('when vatOnPriceInterpretedAs is included without item unit price', function () {
                                     beforeEach(function () {
-                                        component.item.unitPrice = undefined;
+                                        $ctrl.item.unitPrice = undefined;
                                         settings.vatOnPriceInterpretedAs = 'included';
                                         priceSettings.getPriceSettingsDeferred.resolve(settings);
                                         scope.$digest();
@@ -545,42 +540,18 @@ describe('bin.price', function () {
                     describe('on catalog item changes', function () {
                         beforeEach(function () {
                             catalogItem.presentableUnitPrice = 'price';
-                            component.$onChanges();
+                            $ctrl.$onChanges();
                         });
 
                         it('component is in update state', function () {
-                            expect(component.state.name).toEqual('update');
+                            expect($ctrl.state.name).toEqual('update');
                         });
                     });
                 });
-            });
 
-            describe('with presentableUnitPrice on catalog item', function () {
-                beforeEach(function () {
-                    catalogItem.presentableUnitPrice = 'price';
-                });
-
-                describe('and user has no permission', function () {
+                describe('with presentableUnitPrice on catalog item', function () {
                     beforeEach(function () {
-                        binarta.checkpoint.profile.hasPermission.and.returnValue(false);
-                    });
-
-                    describe('when in edit mode', function () {
-                        beforeEach(function () {
-                            topics.subscribe.calls.mostRecent().args[1](true);
-                        });
-
-                        it('component is in readOnly state', function () {
-                            catalogItem.presentableUnitPrice = 'price';
-
-                            expect(component.state.name).toEqual('readOnly');
-                        });
-                    });
-                });
-
-                describe('and user has permission', function () {
-                    beforeEach(function () {
-                        binarta.checkpoint.profile.hasPermission.and.returnValue(true);
+                        catalogItem.presentableUnitPrice = 'price';
                     });
 
                     describe('when in edit mode', function () {
@@ -590,24 +561,40 @@ describe('bin.price', function () {
 
                         it('component is in update state', function () {
                             catalogItem.presentableUnitPrice = 'price';
-
-                            expect(component.state.name).toEqual('update');
+                            expect($ctrl.state.name).toEqual('update');
                         });
+                    });
+                });
+
+                describe('on destroy', function () {
+                    var listener;
+
+                    beforeEach(function () {
+                        listener = topics.subscribe.calls.mostRecent().args[1];
+                        $ctrl.$onDestroy();
+                    });
+
+                    it('edit.mode event is unsubscribed', function () {
+                        expect(topics.unsubscribe.calls.mostRecent().args[0]).toEqual('edit.mode');
+                        expect(topics.unsubscribe.calls.mostRecent().args[1]).toEqual(listener);
+                    });
+
+                    it('not observing profile anymore', function () {
+                        topics.subscribe.calls.reset();
+                        binarta.checkpoint.profile.refresh();
+                        expect(topics.subscribe).not.toHaveBeenCalled();
                     });
                 });
             });
 
-            describe('on destroy', function () {
-                var listener;
-
+            describe('when user is logged out', function () {
                 beforeEach(function () {
-                    listener = topics.subscribe.calls.mostRecent().args[1];
-                    component.$onDestroy();
+                    $ctrl.$onInit();
+                    binarta.checkpoint.profile.signout();
                 });
 
-                it('edit.mode event is unsubscribed', function () {
-                    expect(topics.unsubscribe.calls.mostRecent().args[0]).toEqual('edit.mode');
-                    expect(topics.unsubscribe.calls.mostRecent().args[1]).toEqual(listener);
+                it('component is in readOnly state', function () {
+                    expect($ctrl.state.name).toEqual('readOnly');
                 });
             });
         });

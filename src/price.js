@@ -13,10 +13,36 @@
 
         this.controller = ['$scope', 'binPriceSettings', 'topicRegistry', 'editModeRenderer', 'updateCatalogItem', 'binarta',
             function ($scope, priceSettings, topics, editModeRenderer, updateCatalogItem, binarta) {
-                var ctrl = this, destroyHandlers = [];
+                var $ctrl = this,
+                    destroyHandlers = [],
+                    editing = false;
 
-                if (isInReadOnlyMode()) ctrl.state = new ReadOnlyState();
-                else subscribeToEditMode();
+                $ctrl.$onInit = function () {
+                    if (isInReadOnlyMode()) $ctrl.state = new ReadOnlyState();
+                    else {
+                        installProfileObserver();
+                        binarta.checkpoint.profile.isAuthenticated() ? onSignedIn() : onSignedOut();
+                    }
+                };
+
+                function installProfileObserver() {
+                    var profileObserver = binarta.checkpoint.profile.eventRegistry.observe({
+                        signedin: onSignedIn,
+                        signedout: onSignedOut
+                    });
+                    destroyHandlers.push(function () {
+                        profileObserver.disconnect();
+                    });
+                }
+
+                function onSignedIn() {
+                    if (isPermitted()) subscribeToEditMode();
+                    else $ctrl.state = new ReadOnlyState();
+                }
+
+                function onSignedOut() {
+                    $ctrl.state = new ReadOnlyState();
+                }
 
                 function ReadOnlyState() {
                     this.name = 'readOnly';
@@ -32,12 +58,12 @@
                     this.updatePrice = updatePrice;
                 }
 
-                ctrl.updatePrice = function () {
-                    if (ctrl.state.updatePrice) ctrl.state.updatePrice();
+                $ctrl.updatePrice = function () {
+                    if ($ctrl.state.updatePrice) $ctrl.state.updatePrice();
                 };
 
                 function isInReadOnlyMode() {
-                    return angular.isDefined(ctrl.readOnly);
+                    return angular.isDefined($ctrl.readOnly);
                 }
 
                 function subscribeToEditMode() {
@@ -48,12 +74,13 @@
                 }
 
                 function onEditModeChanged(editMode) {
-                    if (!editMode) ctrl.state = new ReadOnlyState();
-                    else updateEditState();
+                    editing = editMode;
+                    updateState();
                 }
 
-                function updateEditState() {
-                    ctrl.state = isPermitted() ? ctrl.item.presentableUnitPrice ? new UpdateState() : new AddState() : new ReadOnlyState();
+                function updateState() {
+                    if (editing && isPermitted()) $ctrl.state = $ctrl.item.presentableUnitPrice ? new UpdateState() : new AddState();
+                    else $ctrl.state = new ReadOnlyState();
                 }
 
                 function isPermitted() {
@@ -105,7 +132,7 @@
                         state.price = getPrice();
 
                         function getPrice() {
-                            return (state.vatOnPrice ? (ctrl.item.unitPrice || ctrl.item.price) : ctrl.item.price) / 100;
+                            return (state.vatOnPrice ? ($ctrl.item.unitPrice || $ctrl.item.price) : $ctrl.item.price) / 100;
                         }
 
                         state.toggleVatOnPrice = function () {
@@ -125,8 +152,8 @@
 
                             updateCatalogItem({
                                 data: {
-                                    id: ctrl.item.id,
-                                    type: ctrl.item.type,
+                                    id: $ctrl.item.id,
+                                    type: $ctrl.item.type,
                                     price: Math.round(state.price * 100),
                                     context: 'update'
                                 },
@@ -184,7 +211,7 @@
                         }).then(onUpdateSuccess, transitionToErrorState);
 
                         function onUpdateSuccess() {
-                            if (ctrl.onConfigChanged) ctrl.onConfigChanged().then(initialize, transitionToErrorState);
+                            if ($ctrl.onConfigChanged) $ctrl.onConfigChanged().then(initialize, transitionToErrorState);
                             else initialize();
                         }
                     }
@@ -199,11 +226,11 @@
                     });
                 }
 
-                ctrl.$onChanges = function () {
-                    if (!isInReadOnlyMode()) updateEditState();
+                $ctrl.$onChanges = function () {
+                    if (!isInReadOnlyMode()) updateState();
                 };
 
-                ctrl.$onDestroy = function () {
+                $ctrl.$onDestroy = function () {
                     destroyHandlers.forEach(function (handler) {
                         handler();
                     });
