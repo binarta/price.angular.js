@@ -8,7 +8,7 @@
         this.bindings = {
             item: '<catalogItem',
             readOnly: '@',
-            onConfigChanged: '&'
+            onUpdate: '&'
         };
 
         this.controller = ['$scope', 'binPriceSettings', 'topicRegistry', 'editModeRenderer', 'updateCatalogItem', 'binarta',
@@ -128,7 +128,7 @@
                         scope.working = false;
                         state.close = editModeRenderer.close;
                         state.currency = settings.currency;
-                        state.vatOnPrice = settings.vatOnPriceInterpretedAs == 'included';
+                        state.vatOnPrice = settings.vatOnPriceInterpretedAs === 'included';
                         state.price = getPrice();
 
                         function getPrice() {
@@ -161,6 +161,7 @@
                             });
 
                             function onSuccess() {
+                                if ($ctrl.onUpdate) $ctrl.onUpdate();
                                 editModeRenderer.close();
                             }
                         };
@@ -177,7 +178,7 @@
                         priceSettings.getPriceSettings().then(onSuccess, transitionToErrorState);
 
                         function onSuccess(settings) {
-                            scope.state = settings.status == 'unconfirmed' ? new UnconfirmedState() : new ConfirmedState(settings);
+                            scope.state = settings.status === 'unconfirmed' ? new UnconfirmedState() : new ConfirmedState(settings);
                         }
                     }
 
@@ -211,7 +212,10 @@
                         }).then(onUpdateSuccess, transitionToErrorState);
 
                         function onUpdateSuccess() {
-                            if ($ctrl.onConfigChanged) $ctrl.onConfigChanged().then(initialize, transitionToErrorState);
+                            if ($ctrl.onUpdate) {
+                                var promise = $ctrl.onUpdate();
+                                if (promise && promise.then) promise.then(initialize, transitionToErrorState);
+                            }
                             else initialize();
                         }
                     }

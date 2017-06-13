@@ -48,13 +48,13 @@ describe('bin.price', function () {
         });
 
         describe('when component is not set in read-only mode', function () {
-            var onConfigChangedSpy, onConfigChangedDeferred;
+            var onUpdateSpy, onUpdateDeferred;
 
             beforeEach(function () {
-                onConfigChangedDeferred = $q.defer();
-                onConfigChangedSpy = jasmine.createSpy('onConfigChanged');
-                onConfigChangedSpy.and.returnValue(onConfigChangedDeferred.promise);
-                $ctrl = $componentController('binPrice', null, {item: catalogItem, onConfigChanged: onConfigChangedSpy});
+                onUpdateDeferred = $q.defer();
+                onUpdateSpy = jasmine.createSpy('onUpdate');
+                onUpdateSpy.and.returnValue(onUpdateDeferred.promise);
+                $ctrl = $componentController('binPrice', null, {item: catalogItem, onUpdate: onUpdateSpy});
             });
 
             describe('and user has no permission', function () {
@@ -206,13 +206,13 @@ describe('bin.price', function () {
                                                 scope.$digest();
                                             });
 
-                                            it('onConfigChanged handler is executed', function () {
-                                                expect(onConfigChangedSpy).toHaveBeenCalled();
+                                            it('onUpdate handler is executed', function () {
+                                                expect(onUpdateSpy).toHaveBeenCalled();
                                             });
 
-                                            describe('onConfigChanged success', function () {
+                                            describe('onUpdate success', function () {
                                                 beforeEach(function () {
-                                                    onConfigChangedDeferred.resolve();
+                                                    onUpdateDeferred.resolve();
                                                 });
 
                                                 it('price settings are requested', function () {
@@ -246,9 +246,9 @@ describe('bin.price', function () {
                                                 });
                                             });
 
-                                            describe('onConfigChanged error', function () {
+                                            describe('onUpdate error', function () {
                                                 beforeEach(function () {
-                                                    onConfigChangedDeferred.reject();
+                                                    onUpdateDeferred.reject();
                                                     scope.$digest();
                                                 });
 
@@ -440,6 +440,10 @@ describe('bin.price', function () {
 
                                             it('edit-mode renderer is closed', function () {
                                                 expect(edit.close).toHaveBeenCalled();
+                                            });
+
+                                            it('onUpdate handler is executed', function () {
+                                                expect(onUpdateSpy).toHaveBeenCalled();
                                             });
                                         });
 
