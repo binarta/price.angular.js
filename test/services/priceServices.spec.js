@@ -399,13 +399,18 @@ describe('bin.price', function () {
                 });
 
                 describe('on requesting country code', function () {
+                    var actual;
+
                     beforeEach(function () {
                         configReader.calls.reset();
-                        sut.getCountryCode();
+                        sut.getCountryCode().then(function (result) {
+                            actual = result;
+                        });
+                        $rootScope.$digest();
                     });
 
                     it('new value is requested', function () {
-                        expect(configReader.calls.count()).toEqual(1);
+                        expect(actual).toEqual('NEW CODE');
                     });
                 });
             });
@@ -446,13 +451,18 @@ describe('bin.price', function () {
                 });
 
                 describe('on requesting vat rate', function () {
+                    var actual;
+
                     beforeEach(function () {
                         configReader.calls.reset();
-                        sut.getVatRate();
+                        sut.getVatRate().then(function (result) {
+                            actual = result;
+                        });
+                        $rootScope.$digest();
                     });
 
                     it('new value is requested', function () {
-                        expect(configReader.calls.count()).toEqual(1);
+                        expect(actual).toEqual(10);
                     });
                 });
             });
@@ -600,13 +610,18 @@ describe('bin.price', function () {
                 });
 
                 describe('on requesting value', function () {
+                    var actual;
+
                     beforeEach(function () {
                         configReader.calls.reset();
-                        sut.getVatOnPriceInterpretedAs();
+                        sut.getVatOnPriceInterpretedAs().then(function (result) {
+                            actual = result;
+                        });
+                        $rootScope.$digest();
                     });
 
                     it('new value is requested', function () {
-                        expect(configReader.calls.count()).toEqual(1);
+                        expect(actual).toEqual('included');
                     });
                 });
             });

@@ -7,62 +7,81 @@
         var countryCodeKey = 'shop.country.code';
         var defaultVatRateKey = 'shop.default.vat.rate';
         var vatOnPriceKey = 'shop.vat.on.price.interpreted.as';
-        var countryCodePromise, vatRatePromise, currenciesPromise, currency, vatOnPriceInterpretedAsPromise;
+        var countryCode, vatRate, currencies, currency, vatOnPriceInterpretedAs;
         var defaultCurrency = {
             code: 'EUR',
             symbol: '€'
         };
 
         this.getCountryCode = function () {
-            if (!countryCodePromise) countryCodePromise = reader({key: countryCodeKey}).then(function (result) {
-                return result.data.value;
-            }, function () {
+            if (countryCode) return $q.when(countryCode);
+            else return reader({key: countryCodeKey}).then(onSuccess, onError);
+
+            function onSuccess(result) {
+                countryCode = result.data.value;
+                return countryCode;
+            }
+
+            function onError() {
+                countryCode = undefined;
                 return '';
-            });
-            return countryCodePromise;
+            }
         };
 
         this.getVatRate = function () {
-            if (!vatRatePromise) vatRatePromise = reader({key: defaultVatRateKey}).then(function (result) {
-                return result.data.value * 100;
-            }, function () {
+            if (vatRate) return $q.when(vatRate);
+            else return reader({key: defaultVatRateKey}).then(onSuccess, onError);
+
+            function onSuccess(result) {
+                vatRate = result.data.value * 100;
+                return vatRate;
+            }
+
+            function onError() {
                 return 0;
-            });
-            return vatRatePromise;
+            }
         };
 
         this.getCurrency = function () {
-            var deferred = $q.defer();
-            if (currency) deferred.resolve(currency);
+            if (currency) return $q.when(currency);
             else {
+                var deferred = $q.defer();
                 applicationData.then(function (data) {
                     currency = data.currency || defaultCurrency;
                     deferred.resolve(currency);
                 });
+                return deferred.promise;
             }
-            return deferred.promise;
         };
 
         this.getVatOnPriceInterpretedAs = function () {
-            if (!vatOnPriceInterpretedAsPromise) vatOnPriceInterpretedAsPromise = reader({key: vatOnPriceKey}).then(function (result) {
-                return result.data.value;
-            }, function () {
+            if (vatOnPriceInterpretedAs) return $q.when(vatOnPriceInterpretedAs);
+            else return reader({key: vatOnPriceKey}).then(onSuccess, onError);
+
+            function onSuccess(result) {
+                vatOnPriceInterpretedAs = result.data.value;
+                return vatOnPriceInterpretedAs;
+            }
+
+            function onError() {
                 return 'excluded';
-            });
-            return vatOnPriceInterpretedAsPromise;
+            }
         };
 
         this.getCurrencies = function () {
-            if (!currenciesPromise) currenciesPromise = rest({
+            if (currencies) return $q.when(currencies);
+            else return rest({
                 params: {
                     method: 'GET',
                     url: config.baseUri + 'api/usecase?h.usecase=find.all.supported.currencies',
                     withCredentials: true
                 }
-            }).then(function (result) {
-                return result.data;
-            });
-            return currenciesPromise;
+            }).then(onSuccess);
+
+            function onSuccess(result) {
+                currencies = result.data;
+                return currencies;
+            }
         };
 
         this.getCountries = function () {
@@ -121,13 +140,13 @@
 
         this.updateCountryCode = function (code) {
             return writer({key: countryCodeKey, value: code}).then(function () {
-                countryCodePromise = undefined;
+                countryCode = code;
             });
         };
 
         this.updateVatRate = function (rate) {
             return writer({key: defaultVatRateKey, value: ((rate || 0) / 100)}).then(function () {
-                vatRatePromise = undefined;
+                vatRate = rate;
             });
         };
 
@@ -175,7 +194,7 @@
 
         this.updateVatOnPriceInterpretedAs = function (value) {
             return writer({key: vatOnPriceKey, value: value}).then(function () {
-                vatOnPriceInterpretedAsPromise = undefined;
+                vatOnPriceInterpretedAs = value;
             });
         };
 
