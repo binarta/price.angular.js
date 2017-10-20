@@ -4,9 +4,9 @@
                 i18n code="price.add.button" read-only ng-bind="::var"></button>
     </span>
     <span ng-switch-when="update">
-        <span class="bin-editable" ng-click="$ctrl.updatePrice()" ng-bind="$ctrl.item.presentableUnitPrice"></span>
+        <span class="bin-price bin-editable" ng-click="$ctrl.updatePrice()" ng-bind="$ctrl.item.presentableUnitPrice"></span>
     </span>
     <span ng-switch-default>
-        <span ng-bind="$ctrl.item.presentableUnitPrice"></span>
+        <span class="bin-price" ng-bind="$ctrl.item.presentableUnitPrice"></span>
     </span>
 </span>
