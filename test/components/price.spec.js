@@ -23,26 +23,81 @@ describe('bin.price', function () {
         }));
 
         describe('when component is set in read-only mode', function () {
-            beforeEach(function () {
-                $ctrl = $componentController('binPrice', null, {item: catalogItem, readOnly: ''});
-                $ctrl.$onInit();
-            });
-
-            it('component is in readOnly state', function () {
-                expect($ctrl.state.name).toEqual('readOnly');
-            });
-
-            it('catalog item is available', function () {
-                expect($ctrl.item).toEqual(catalogItem);
-            });
-
-            describe('on catalogItem data changes', function () {
+            describe('with item attribute', function () {
                 beforeEach(function () {
-                    catalogItem.presentableUnitPrice = 'updated';
+                    $ctrl = $componentController('binPrice', null, {item: catalogItem, readOnly: ''});
+                    catalogItem.presentableUnitPrice = '$1.25';
+                    $ctrl.$onInit();
                 });
 
-                it('updated presentableUnitPrice is available', function () {
-                    expect($ctrl.item.presentableUnitPrice).toEqual(catalogItem.presentableUnitPrice);
+                afterEach(function () {
+                    $ctrl.$onDestroy();
+                });
+
+                it('uses default template url', function () {
+                    expect($ctrl.templateUrl).toEqual('bin-price-default.html');
+                });
+
+                it('component is in readOnly state', function () {
+                    expect($ctrl.state.name).toEqual('readOnly');
+                });
+
+                it('catalog item is available', function () {
+                    expect($ctrl.item).toEqual(catalogItem);
+                });
+
+                it('exposes the presentable unit price as price', function () {
+                    expect($ctrl.price).toBeDefined();
+                    expect($ctrl.price).toEqual(catalogItem.presentableUnitPrice);
+                });
+
+                describe('on catalogItem data changes', function () {
+                    beforeEach(function () {
+                        catalogItem.presentableUnitPrice = 'updated';
+                    });
+
+                    it('updated presentableUnitPrice is available', function () {
+                        expect($ctrl.item.presentableUnitPrice).toEqual(catalogItem.presentableUnitPrice);
+                    });
+                });
+            });
+
+            it('you can specify a custom template url', function () {
+                $ctrl = $componentController('binPrice', null, {
+                    item: catalogItem,
+                    readOnly: '',
+                    templateUrl: 'custom-template.html'
+                });
+                $ctrl.$onInit();
+                expect($ctrl.templateUrl).toEqual('custom-template.html');
+                $ctrl.$onDestroy();
+            });
+
+            describe('when wrapped inside <bin-catalog-item/>', function () {
+                beforeEach(function () {
+                    $ctrl = $componentController('binPrice', null, {readOnly: ''});
+                    $ctrl.itemCtrl = {item: catalogItem};
+                });
+
+                describe('without item attribute', function () {
+                    beforeEach(function () {
+                        $ctrl.$onInit();
+                    });
+
+                    it('expose catalog item from <bin-catalog--item/>', function () {
+                        expect($ctrl.item).toEqual(catalogItem);
+                    });
+                });
+
+                describe('with item attribute', function () {
+                    beforeEach(function () {
+                        $ctrl.item = 'from-attribute';
+                        $ctrl.$onInit();
+                    });
+
+                    it('expose catalog item from <bin-catalog--item/>', function () {
+                        expect($ctrl.item).toEqual('from-attribute');
+                    });
                 });
             });
         });
@@ -549,6 +604,10 @@ describe('bin.price', function () {
 
                         it('component is in update state', function () {
                             expect($ctrl.state.name).toEqual('update');
+                        });
+
+                        it('exposes the presentable unit price as price', function () {
+                            expect($ctrl.price).toEqual(catalogItem.presentableUnitPrice);
                         });
                     });
                 });

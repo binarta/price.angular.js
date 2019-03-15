@@ -11,6 +11,10 @@
             onUpdate: '&'
         };
 
+        this.require = {
+            itemCtrl: '?^^binCatalogItem'
+        };
+
         this.controller = ['$scope', 'binPriceSettings', 'topicRegistry', 'editModeRenderer', 'updateCatalogItem', 'binarta',
             function ($scope, priceSettings, topics, editModeRenderer, updateCatalogItem, binarta) {
                 var $ctrl = this,
@@ -18,6 +22,11 @@
                     editing = false;
 
                 $ctrl.$onInit = function () {
+                    if (!$ctrl.templateUrl)
+                        $ctrl.templateUrl = 'bin-price-default.html';
+                    if ($ctrl.itemCtrl && !$ctrl.item)
+                        $ctrl.item = $ctrl.itemCtrl.item;
+                    $ctrl.price = $ctrl.item.presentableUnitPrice;
                     if (isInReadOnlyMode()) $ctrl.state = new ReadOnlyState();
                     else {
                         installProfileObserver();
@@ -79,6 +88,7 @@
                 }
 
                 function updateState() {
+                    $ctrl.price = $ctrl.item.presentableUnitPrice;
                     if (editing && isPermitted()) $ctrl.state = $ctrl.item.presentableUnitPrice ? new UpdateState() : new AddState();
                     else $ctrl.state = new ReadOnlyState();
                 }
