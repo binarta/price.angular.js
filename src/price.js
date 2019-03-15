@@ -8,7 +8,8 @@
         this.bindings = {
             item: '<catalogItem',
             readOnly: '@',
-            onUpdate: '&'
+            onUpdate: '&',
+            templateUrl: '@'
         };
 
         this.require = {
