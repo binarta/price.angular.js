@@ -15,7 +15,8 @@ describe('bin.price', function () {
             catalogItem = {
                 id: 'id',
                 type: 'type',
-                unitPrice: 125,
+                unitPrice: 110,
+                unitPriceInclVat: 125,
                 price: 110
             };
             binarta.checkpoint.gateway.permissions = [];
@@ -422,12 +423,13 @@ describe('bin.price', function () {
                                         describe('on success', function () {
                                             beforeEach(function () {
                                                 $ctrl.item.unitPrice = 500;
+                                                $ctrl.item.unitPriceInclVat = 605
                                                 priceSettings.updateVatOnPriceInterpretedAsDeferred.resolve();
                                                 scope.$digest();
                                             });
 
                                             it('price is refreshed', function () {
-                                                expect(scope.state.price).toEqual(5);
+                                                expect(scope.state.price).toEqual(6.05);
                                             });
                                         });
 
@@ -521,6 +523,7 @@ describe('bin.price', function () {
                                 describe('when vatOnPriceInterpretedAs is included without item unit price', function () {
                                     beforeEach(function () {
                                         $ctrl.item.unitPrice = undefined;
+                                        $ctrl.item.unitPriceInclVat = undefined;
                                         settings.vatOnPriceInterpretedAs = 'included';
                                         priceSettings.getPriceSettingsDeferred.resolve(settings);
                                         scope.$digest();

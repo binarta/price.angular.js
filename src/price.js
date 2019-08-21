@@ -143,7 +143,7 @@
                         state.price = getPrice();
 
                         function getPrice() {
-                            return (state.vatOnPrice ? ($ctrl.item.unitPrice || $ctrl.item.price) : $ctrl.item.price) / 100;
+                            return (state.vatOnPrice ? ($ctrl.item.unitPriceInclVat || $ctrl.item.unitPrice || $ctrl.item.price) : $ctrl.item.price) / 100;
                         }
 
                         state.toggleVatOnPrice = function () {

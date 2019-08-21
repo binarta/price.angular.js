@@ -1,12 +1,19 @@
 {
+  "scripts": {
+    "postinstall": "bower install",
+    "test": "karma start karma.conf.js --single-run --browsers ChromeHeadless",
+    "test:phantomjs": "karma start karma.conf.js --single-run --browsers PhantomJS",
+    "test:watch": "karma start karma.conf.js --browsers ChromeHeadless"
+  },
   "devDependencies": {
-    "jasmine-core": "^2.4.1",
-    "karma": "^0.13.22",
-    "karma-jasmine": "^1.0.2",
-    "karma-phantomjs-launcher": "^1.0.0",
-    "phantomjs": "^2.1.1",
     "gulp": "^3.8.10",
     "gulp-angular-templatecache": "^1.5.0",
-    "gulp-minify-html": "^0.1.8"
+    "gulp-minify-html": "^0.1.8",
+    "jasmine-core": "^2.4.1",
+    "karma": "^0.13.22",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-phantomjs-launcher": "^1.0.0",
+    "phantomjs": "^2.1.1"
   }
 }
